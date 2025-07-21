@@ -1,0 +1,5 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/asifur.rahman/Downloads/comp371-project/src/main'
+relocations:     []
+...
