@@ -266,8 +266,8 @@ int main(int argc, char *argv[])
     glUseProgram(shaderProgram);
 
     // Camera parameters for view transform
-    vec3 cameraPosition(0.6f, 1.0f, 10.0f);
-    vec3 cameraLookAt(0.0f, 0.0f, -1.0f);
+    vec3 cameraPosition(-25.0f, 20.0f, 15.0f);
+    vec3 cameraLookAt(-25.0f, 20.0f, 15.0f);
     vec3 cameraUp(0.0f, 1.0f, 0.0f);
 
     // Other camera parameters
