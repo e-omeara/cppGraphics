@@ -347,7 +347,7 @@ int main(int argc, char *argv[])
         unsigned long millis = (unsigned long)milliseconds;
         float red = 2 * 3.14159 * (millis % 60000) / 59999.0f; // Normalize to [0, 1]
         red = (sin(red) + 1.0f) / 2.0f;                        // Normalize to [0, 1]
-        red = red * 90;
+        red = red * 900;
         red = red - 45;
         // bicepAngle = red;
         // forearmAngle = red + 0.5;
@@ -359,44 +359,31 @@ int main(int argc, char *argv[])
         mat4 groundWorldMatrix = translate(mat4(1.0f), vec3(0.0f, -0.01f, 0.0f)) * scale(mat4(1.0f), vec3(1000.0f, 0.02f, 1000.0f));
         GLuint worldMatrixLocation = glGetUniformLocation(shaderProgram, "worldMatrix");
         glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &groundWorldMatrix[0][0]);
-
         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
 
         // draw bicep base
-        mat4 pillarWorldMatrix = translate(mat4(1.0f), vec3(5.0f, 1.f, 5.0f)) * rotate(mat4(1.0f), radians(180.0f), vec3(0.0f, 1.0f, 0.0f)) * scale(mat4(1.0f), vec3(2.1f, 2.1f, 2.1f));
-        glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &pillarWorldMatrix[0][0]);
+        mat4 baseMatrix = translate(mat4(1.0f), vec3(5.0f, 1.f, 5.0f)) * rotate(mat4(1.0f), radians(180.0f), vec3(0.0f, 1.0f, 0.0f)) * scale(mat4(1.0f), vec3(2.1f, 2.1f, 2.1f));
+        glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &baseMatrix[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // Draw bicep
         // translate in z sin(rotation)
         // translate in y cos(rotation)
-        pillarWorldMatrix = translate(mat4(1.0f), vec3(5.0f, bicepLength / 2 * cos(radians(bicepAngle)), 5.0f + bicepLength / 2 * sin(radians(bicepAngle)))) * rotate(mat4(1.0f), radians(bicepAngle), vec3(1.0f, 0.0f, 0.0f)) * scale(mat4(1.0f), vec3(1.0f, bicepLength, 1.0f));
-        glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &pillarWorldMatrix[0][0]);
+        mat4 bicepMatrix = translate(mat4(1.0f), vec3(5.0f, bicepLength / 2 * cos(radians(bicepAngle)), 5.0f + bicepLength / 2 * sin(radians(bicepAngle)))) * rotate(mat4(1.0f), radians(bicepAngle), vec3(1.0f, 0.0f, 0.0f)) * scale(mat4(1.0f), vec3(1.0f, bicepLength, 1.0f));
+        glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &bicepMatrix[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         float jointHeight = bicepLength * cos(radians(bicepAngle));
         float jointHorizontal = bicepLength * sin(radians(bicepAngle));
-        // pillarWorldMatrix = translate(mat4(1.0f), vec3(5.0f, jointHeight, 5.0f + jointHorizontal)) * rotate(mat4(1.0f), radians(180.0f), vec3(0.0f, 1.0f, 0.0f)) * scale(mat4(1.0f), vec3(2.1f, 2.1f, 2.1f));
-        // glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &pillarWorldMatrix[0][0]);
-        // glDrawArrays(GL_TRIANGLES, 0, 36);
-
-        // hinge rotation
-        vec3 jointPos = vec3(5.0f,
-                             bicepLength * cos(radians(bicepAngle)),
-                             5.0f + bicepLength * sin(radians(bicepAngle)));
-        // translate → align hinge yaw → apply elbow flexion → scale
-        mat4 hingeM =
-            translate(mat4(1.0f), jointPos) *
-            rotate(mat4(1.0f), radians(180.0f), vec3(0, 1, 0)) *        // existing yaw
-            rotate(mat4(1.0f), radians(-forearmAngle), vec3(1, 0, 0)) * // hinge flex around X
-            scale(mat4(1.0f), vec3(2.1f));
-        glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &hingeM[0][0]);
+        vec3 jointPos = vec3(5.0f, jointHeight, 5.0f + jointHorizontal);
+        mat4 hingeMatrix = translate(mat4(1.0f), vec3(5.0f, jointHeight, 5.0f + jointHorizontal)) * rotate(mat4(1.0f), radians(forearmAngle + bicepAngle), vec3(1.0f, 0.0f, 0.0f)) * scale(mat4(1.0f), vec3(2.1f, 2.1f, 2.1f));
+        glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &hingeMatrix[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // forearm
         float totalAngle = forearmAngle + bicepAngle;
-        pillarWorldMatrix = translate(mat4(1.0f), vec3(5.0f, forearmLength / 2 * cos(radians(totalAngle)) + jointHeight, 5.0f + jointHorizontal + forearmLength / 2 * sin(radians(totalAngle)))) * rotate(mat4(1.0f), radians(totalAngle), vec3(1.0f, 0.0f, 0.0f)) * scale(mat4(1.0f), vec3(1.0f, forearmLength, 1.0f));
-        glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &pillarWorldMatrix[0][0]);
+        mat4 foreArmMatrix = translate(mat4(1.0f), vec3(5.0f, forearmLength / 2 * cos(radians(totalAngle)) + jointHeight, 5.0f + jointHorizontal + forearmLength / 2 * sin(radians(totalAngle)))) * rotate(mat4(1.0f), radians(totalAngle), vec3(1.0f, 0.0f, 0.0f)) * scale(mat4(1.0f), vec3(1.0f, forearmLength, 1.0f));
+        glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &foreArmMatrix[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // @TODO 2 - Update and draw projectiles
