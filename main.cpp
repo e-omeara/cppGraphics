@@ -1,58 +1,27 @@
-//
-// COMP 371 Labs Framework
-//
-// Created by Nicolas Bergeron on 20/06/2019.
-//
 
+// Macro commands and imports
 #include <iostream>
 #include <list>
 
-#define GLEW_STATIC 1 // This allows linking with Static Library on Windows, without DLL
-#include <GL/glew.h>  // Include GLEW - OpenGL Extension Wrangler
+#define GLEW_STATIC 1 
+#include <GL/glew.h>  
 
-#include <GLFW/glfw3.h> // cross-platform interface for creating a graphical context,
-                        // initializing OpenGL and binding inputs
+#include <GLFW/glfw3.h> 
 
-#include <glm/glm.hpp>                  // GLM is an optimized math library with syntax to similar to OpenGL Shading Language
-#include <glm/gtc/matrix_transform.hpp> // include this to create transformation matrices
+#include <glm/glm.hpp>                  
+#include <glm/gtc/matrix_transform.hpp> 
 #include <glm/common.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
+//using relevant namespaces
 using namespace glm;
 using namespace std;
 
-class Projectile
-{
-public:
-    Projectile(vec3 position, vec3 velocity, int shaderProgram) : mPosition(position), mVelocity(velocity)
-    {
-        mWorldMatrixLocation = glGetUniformLocation(shaderProgram, "worldMatrix");
-    }
-
-    void Update(float dt)
-    {
-        mPosition += mVelocity * dt;
-    }
-
-    void Draw()
-    {
-        // this is a bit of a shortcut, since we have a single vbo, it is already bound
-        // let's just set the world matrix in the vertex shader
-
-        mat4 worldMatrix = translate(mat4(1.0f), mPosition) * rotate(mat4(1.0f), radians(180.0f), vec3(0.0f, 1.0f, 0.0f)) * scale(mat4(1.0f), vec3(0.2f, 0.2f, 0.2f));
-        glUniformMatrix4fv(mWorldMatrixLocation, 1, GL_FALSE, &worldMatrix[0][0]);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-    }
-
-private:
-    GLuint mWorldMatrixLocation;
-    vec3 mPosition;
-    vec3 mVelocity;
-};
 
 
+// Declaring our functions and structs
 GLuint loadTexture(const char *filename);
 
 const char* getVertexShaderSource();
@@ -78,7 +47,7 @@ struct TexturedColoredVertex
 
 
 
-// Textured Cube model
+// Textured Cube model with position, color, and UV coordinates
 const TexturedColoredVertex texturedCubeVertexArray[] = {  // position,                            color
     TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f)), //left - red
     TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 1.0f)),
@@ -129,9 +98,9 @@ const TexturedColoredVertex texturedCubeVertexArray[] = {  // position,         
     TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 0.0f), vec2(0.0f, 1.0f))
 };
 
+// String version of vertex shader
 const char *getVertexShaderSource()
 {
-    // For now, you use a string for your shader code, in the assignment, shaders will be stored in .glsl files
     return "#version 330 core\n"
            "layout (location = 0) in vec3 aPos;"
            "layout (location = 1) in vec3 aColor;"
@@ -149,6 +118,7 @@ const char *getVertexShaderSource()
            "}";
 }
 
+// String version of fragment shader
 const char *getFragmentShaderSource()
 {
     return "#version 330 core\n"
@@ -159,7 +129,7 @@ const char *getFragmentShaderSource()
            "   FragColor = vec4(vertexColor.r, vertexColor.g, vertexColor.b, 1.0f);"
            "}";
 }
-
+// string version of textured shader with UV coordinates
 const char* getTexturedVertexShaderSource()
 {
         return
@@ -183,6 +153,7 @@ const char* getTexturedVertexShaderSource()
                 "}";
 }
 
+//  string version of textured vertex shader with UV coordinates
 const char* getTexturedFragmentShaderSource()
 {
     return
@@ -199,6 +170,7 @@ const char* getTexturedFragmentShaderSource()
                 "}";
 }
 
+// compile and linking shaders
 int compileAndLinkShaders(const char* vertexShaderSource, const char* fragmentShaderSource)
 {
     // compile and link shader program
@@ -253,7 +225,7 @@ int compileAndLinkShaders(const char* vertexShaderSource, const char* fragmentSh
 }
 
 
-
+// creating the cube texture cube vertex array object
 int createTexturedCubeVertexArrayObject()
 {
     // Create a vertex array
@@ -298,7 +270,7 @@ int createTexturedCubeVertexArrayObject()
     return vertexArrayObject;
 }
 
-
+// setting the projection matrix
 void setProjectionMatrix(int shaderProgram, mat4 projectionMatrix)
 {
     glUseProgram(shaderProgram);
@@ -306,6 +278,7 @@ void setProjectionMatrix(int shaderProgram, mat4 projectionMatrix)
     glUniformMatrix4fv(projectionMatrixLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
 }
 
+// setting the view matrix
 void setViewMatrix(int shaderProgram, mat4 viewMatrix)
 {
     glUseProgram(shaderProgram);
@@ -313,6 +286,7 @@ void setViewMatrix(int shaderProgram, mat4 viewMatrix)
     glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
 }
 
+// setting the world matrix
 void setWorldMatrix(int shaderProgram, mat4 worldMatrix)
 {
     glUseProgram(shaderProgram);
@@ -321,7 +295,7 @@ void setWorldMatrix(int shaderProgram, mat4 worldMatrix)
 }
 
 
-
+// main function
 int main(int argc, char *argv[])
 {
     // Initialize GLFW and OpenGL version
@@ -342,8 +316,7 @@ int main(int argc, char *argv[])
     }
     glfwMakeContextCurrent(window);
 
-    // @TODO 3 - Disable mouse cursor
-    // ...
+    // Disable mouse cursor
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // Initialize GLEW
@@ -370,12 +343,12 @@ int main(int argc, char *argv[])
     glUseProgram(colorShaderProgram);
 
     // Camera parameters for view transform
-    vec3 cameraPosition(-25.0f, 20.0f, 15.0f);
-    vec3 cameraLookAt(-25.0f, 20.0f, 15.0f);
+    vec3 cameraPosition(-25.0f, 20.0f, -5.0f);
+    vec3 cameraLookAt(-1.0f, 0.0f, 5.0f);
     vec3 cameraUp(0.0f, 1.0f, 0.0f);
 
     // Other camera parameters
-    float cameraSpeed = 1.0f;
+    float cameraSpeed = 5.0f;
     float cameraFastSpeed = 2 * cameraSpeed;
     float cameraHorizontalAngle = 90.0f;
     float cameraVerticalAngle = 0.0f;
@@ -400,7 +373,7 @@ int main(int argc, char *argv[])
     GLuint viewMatrixLocation = glGetUniformLocation(colorShaderProgram, "viewMatrix");
     glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
 
-        // Set View and Projection matrices on both shaders
+    // Set View and Projection matrices on both shaders
     setViewMatrix(colorShaderProgram, viewMatrix);
     setViewMatrix(texturedShaderProgram, viewMatrix);
 
@@ -420,17 +393,22 @@ int main(int argc, char *argv[])
     // Enable Backface culling
     glEnable(GL_CULL_FACE);
 
-    // @TODO 1 - Enable Depth Test
-    // ...
+    // Enable Depth Test
     glEnable(GL_DEPTH_TEST);
 
-    // Container for projectiles to be implemented in tutorial
-    list<Projectile> projectileList;
-
-    float bicepAngle = 25.0f;  // relative to ground plane
+    // Parameters to control robotic arm
+    float bicepAngle = 25.0f;  // relative to vertical
     float forearmAngle = 0.0f; // relative to bicep
     float bicepLength = 20.0f;
     float forearmLength = 10.0f;
+
+
+    // parameters for our target cube
+    bool newCube = false;
+    float cubeX = 5.f;
+    float cubeY = 1.f;
+    float cubeZ = 25.f;
+
 
     // Entering Main Loop
     while (!glfwWindowShouldClose(window))
@@ -440,48 +418,34 @@ int main(int argc, char *argv[])
         lastFrameTime += dt;
 
         // Each frame, reset color of each pixel to glClearColor
-        // @TODO 1
-        // Add the GL_DEPTH_BUFFER_BIT to glClear – TODO 1
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // @TODO 1 - Clear Depth Buffer Bit as well
-        // ...
-        // glClear(GL_COLOR_BUFFER_BIT);
-
+        // keeping track of time for adjustment with time purposes
         auto now = chrono::system_clock::now();
-        // Convert the current time to time since epoch
         auto duration = now.time_since_epoch();
-        // Convert duration to milliseconds
         auto milliseconds = chrono::duration_cast<chrono::milliseconds>(
                                 duration)
                                 .count();
         unsigned long millis = (unsigned long)milliseconds;
-        float red = 2 * 3.14159 * (millis % 60000) / 59999.0f; // Normalize to [0, 1]
-        red = (sin(red) + 1.0f) / 2.0f;                        // Normalize to [0, 1]
-        red = red * 900;
-        red = red - 45;
-        // bicepAngle = red;
-        // forearmAngle = red + 0.5;
 
+
+        // Enable our texture shader program, set the texture location, bind the brick texture
         glUseProgram(texturedShaderProgram);
-
         glActiveTexture(GL_TEXTURE0);
         GLuint textureLocation = glGetUniformLocation(texturedShaderProgram, "textureSampler");
         glBindTexture(GL_TEXTURE_2D, brickTextureID);
         glUniform1i(textureLocation, 0);                // Set our Texture sampler to user Texture Unit 0
 
-        // Draw geometry
+        // Bind the appropriate VAO
         glBindVertexArray(vao);
 
         // Draw ground
-         // Draw ground
         mat4 groundWorldMatrix = translate(mat4(1.0f), vec3(0.0f, -0.01f, 0.0f)) * scale(mat4(1.0f), vec3(1000.0f, 0.02f, 1000.0f));
         setWorldMatrix(texturedShaderProgram, groundWorldMatrix);
         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
 
         // draw bicep base
         glBindTexture(GL_TEXTURE_2D, cementTextureID);
-        //glUseProgram(texturedShaderProgram);
         mat4 baseMatrix = translate(mat4(1.0f), vec3(5.0f, 1.f, 5.0f)) * rotate(mat4(1.0f), radians(180.0f), vec3(0.0f, 1.0f, 0.0f)) * scale(mat4(1.0f), vec3(2.1f, 2.1f, 2.1f));
         setWorldMatrix(texturedShaderProgram, baseMatrix);
         glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -493,6 +457,7 @@ int main(int argc, char *argv[])
         setWorldMatrix(texturedShaderProgram, bicepMatrix);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
+        // Draw the joint, angle following bicep angle
         float jointHeight = bicepLength * cos(radians(bicepAngle));
         float jointHorizontal = bicepLength * sin(radians(bicepAngle));
         vec3 jointPos = vec3(5.0f, jointHeight, 5.0f + jointHorizontal);
@@ -500,22 +465,29 @@ int main(int argc, char *argv[])
         setWorldMatrix(texturedShaderProgram, hingeMatrix);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
-        // forearm
+        // Calculate forarm angle and draw
         float totalAngle = forearmAngle + bicepAngle;
         mat4 foreArmMatrix = translate(mat4(1.0f), vec3(5.0f, forearmLength / 2 * cos(radians(totalAngle)) + jointHeight, 5.0f + jointHorizontal + forearmLength / 2 * sin(radians(totalAngle)))) * rotate(mat4(1.0f), radians(totalAngle), vec3(1.0f, 0.0f, 0.0f)) * scale(mat4(1.0f), vec3(1.0f, forearmLength, 1.0f));
         setWorldMatrix(texturedShaderProgram, foreArmMatrix);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
-        // @TODO 2 - Update and draw projectiles
-        // ...
-        for (list<Projectile>::iterator it = projectileList.begin(); it != projectileList.end(); it++)
-        {
-            it->Update(dt);
-            it->Draw();
-        }
+        // Calculate forarm angle and draw
+        //float totalAngle = forearmAngle + bicepAngle;
+        mat4 hammerMatrix = translate(mat4(1.0f), vec3(5.0f, forearmLength * cos(radians(totalAngle)) + jointHeight, 5.0f + jointHorizontal + forearmLength * sin(radians(totalAngle)))) * rotate(mat4(1.0f), radians(totalAngle), vec3(1.0f, 0.0f, 0.0f)) * scale(mat4(1.0f), vec3(2.0f, 2.0f, 8.0f));
+        setWorldMatrix(texturedShaderProgram, hammerMatrix);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
-        // Spinning cube at camera position
-        spinningCubeAngle += 180.0f * dt;
+
+
+        // calcualte new cube position if necessary
+        // draw cube
+        mat4 cubeMatrix = translate(mat4(1.0f), vec3(cubeX, cubeY, cubeZ)) * scale(mat4(1.0f), vec3(2.0f, 2.0f, 2.0f));
+        setWorldMatrix(texturedShaderProgram, cubeMatrix);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        //calcuate distance from hammer to cube
+        
+
 
 
 
@@ -542,13 +514,13 @@ int main(int argc, char *argv[])
         bool fastCam = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
         float currentCameraSpeed = (fastCam) ? cameraFastSpeed : cameraSpeed;
 
-        // @TODO 4 - Calculate mouse motion dx and dy
-        //         - Update camera horizontal and vertical angle
+
+        // Update camera horizontal and vertical angle using the mouse position
         double mousePosX, mousePosY;
         glfwGetCursorPos(window, &mousePosX, &mousePosY);
 
-        double dx = mousePosX - lastMousePosX;
-        double dy = mousePosY - lastMousePosY;
+        double dx = - mousePosX + lastMousePosX;
+        double dy = - mousePosY + lastMousePosY;
 
         lastMousePosX = mousePosX;
         lastMousePosY = mousePosY;
@@ -569,18 +541,16 @@ int main(int argc, char *argv[])
             cameraHorizontalAngle += 360;
         }
 
-        float theta = radians(cameraHorizontalAngle);
+        float theta = radians(-cameraHorizontalAngle);
         float phi = radians(cameraVerticalAngle);
 
-        cameraLookAt = vec3(cosf(phi) * cosf(theta), sinf(phi), -cosf(phi) * sinf(theta));
+        cameraLookAt = vec3(cosf(phi) * cosf(theta), -sinf(phi), -cosf(phi) * sinf(theta));
         vec3 cameraSideVector = glm::cross(cameraLookAt, vec3(0.0f, 1.0f, 0.0f));
 
         glm::normalize(cameraSideVector);
 
-        //...
 
-        // @TODO 5 = use camera lookat and side vectors to update positions with ASDW
-        // adjust code below
+        // Use camera lookat and side vectors to update positions with ASDW
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) // move camera to the left
         {
             cameraPosition -= cameraSideVector * currentCameraSpeed * dt;
@@ -601,63 +571,46 @@ int main(int argc, char *argv[])
             cameraPosition += cameraLookAt * currentCameraSpeed * dt;
         }
 
-        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) // move camera to the left
+        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) // move robot bicep to the left
         {
 
             if (bicepAngle > -50.0)
                 bicepAngle = bicepAngle - 0.1;
         }
 
-        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) // move camera to the right
+        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) // move robot bicep to the right
         {
             if (bicepAngle < 50.0)
                 bicepAngle = bicepAngle + 0.1;
         }
 
-        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) // move camera up
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) // move firearm up/to the left
         {
             if (forearmAngle > -110)
                 forearmAngle += -0.1;
         }
 
-        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) // move camera down
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) // move forearm down/to the right
         {
             if (forearmAngle < 110)
                 forearmAngle += 0.1;
         }
 
-        // TODO 6
-        // Set the view matrix for first and third person cameras
-        // - In first person, camera lookat is set like below
-        // - In third person, camera position is on a sphere looking towards center
+
+        // Set the view matrix for first person
         mat4 viewMatrix = mat4(1.0f);
-        if (cameraFirstPerson)
-        {
-            viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp );
-        }
-        else
-        {
-            // Position of the camera is on the sphere looking at the point of interest (cameraPosition)
-            float radius = 5.0f;
-            vec3 position = cameraPosition - vec3(radius * cosf(phi)*cosf(theta),
-                                                  radius * sinf(phi),
-                                                  -radius * cosf(phi)*sinf(theta));
-;
-            viewMatrix = lookAt(position, cameraPosition, cameraUp);
-        }
+        viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp );
+        
+
         
         setViewMatrix(colorShaderProgram, viewMatrix);
         setViewMatrix(texturedShaderProgram, viewMatrix);
-        // @TODO 2 - Shoot Projectiles
-        //
-        // shoot projectiles on mouse left click
-        // To detect onPress events, we need to check the last state and the current state to detect the state change
-        // Otherwise, you would shoot many projectiles on each mouse press
-        // ...
+
+        // left click action
         if (lastMouseLeftState == GLFW_RELEASE && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
         {
             const float projectileSpeed = 25.0f;
-            projectileList.push_back(Projectile(cameraPosition, projectileSpeed * cameraLookAt, colorShaderProgram));
+            cout << "left click !" << endl;
         }
         lastMouseLeftState = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
     }
